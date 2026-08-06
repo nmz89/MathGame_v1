@@ -1,0 +1,15 @@
+/Users/nzahlut/Documents/MathGame_v1/bin/Debug/net10.0/MathGame_v1
+/Users/nzahlut/Documents/MathGame_v1/bin/Debug/net10.0/MathGame_v1.deps.json
+/Users/nzahlut/Documents/MathGame_v1/bin/Debug/net10.0/MathGame_v1.runtimeconfig.json
+/Users/nzahlut/Documents/MathGame_v1/bin/Debug/net10.0/MathGame_v1.dll
+/Users/nzahlut/Documents/MathGame_v1/bin/Debug/net10.0/MathGame_v1.pdb
+/Users/nzahlut/Documents/MathGame_v1/obj/Debug/net10.0/MathGame_v1.GeneratedMSBuildEditorConfig.editorconfig
+/Users/nzahlut/Documents/MathGame_v1/obj/Debug/net10.0/MathGame_v1.AssemblyInfoInputs.cache
+/Users/nzahlut/Documents/MathGame_v1/obj/Debug/net10.0/MathGame_v1.AssemblyInfo.cs
+/Users/nzahlut/Documents/MathGame_v1/obj/Debug/net10.0/MathGame_v1.csproj.CoreCompileInputs.cache
+/Users/nzahlut/Documents/MathGame_v1/obj/Debug/net10.0/MathGame_v1.sourcelink.json
+/Users/nzahlut/Documents/MathGame_v1/obj/Debug/net10.0/MathGame_v1.dll
+/Users/nzahlut/Documents/MathGame_v1/obj/Debug/net10.0/refint/MathGame_v1.dll
+/Users/nzahlut/Documents/MathGame_v1/obj/Debug/net10.0/MathGame_v1.pdb
+/Users/nzahlut/Documents/MathGame_v1/obj/Debug/net10.0/MathGame_v1.genruntimeconfig.cache
+/Users/nzahlut/Documents/MathGame_v1/obj/Debug/net10.0/ref/MathGame_v1.dll
