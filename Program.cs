@@ -3,7 +3,7 @@ List<GameRunRecording> runHistory = new List<GameRunRecording>();
 
 GameStart();
 
-void GameStart()
+void GameStart() // Main menu method to display an offer to the player to choose a language before continuing onto the game itself
 {
     while (true)
     {
@@ -31,7 +31,7 @@ void GameStart()
                 Console.WriteLine("See you later!\n¡Nos vemos!");
                 return;
             default:
-                for (int i = 3; i > 0; i--)
+                for (int i = 3; i > 0; i--) // inform the user that the input was not valid, prompts for correct input
                 {
                     Console.Write($"\rInvalid selection. Try again in {i}...\tOpción incorrecta. Intenta de nuevo en {i}...");
                     Thread.Sleep(1000);
@@ -42,7 +42,7 @@ void GameStart()
     }
 }
 
-void GameMenu()
+void GameMenu() // Actual main menu for the game, localized to one of the two language options
 {
     Console.Clear();
 
@@ -71,12 +71,12 @@ void GameMenu()
             FiveQuestionsMode(true); // 'true' switches to HARD mode
             break;
         case "3":
-            PlayByOperation(); //
+            PlayByOperation(); // displays a submenu for choosing specific operations to play through, all defaulting to Easy mode
             break;
         case "4":
-            PastScores(); // not built out yet
+            PastScores(); // shows a poorly formatted readout of the score for the past 10 runs
             break;
-        default: // display a goodbye message and close the application
+        default: // displays a goodbye message and closes the application with no confirmation
             Console.WriteLine(Text.OutMessage);
             Thread.Sleep(1500);
             return;
@@ -84,7 +84,8 @@ void GameMenu()
     }
 }
 
-void PlayByOperation()
+void PlayByOperation()  // menu to select an operation and pass that choice along to both GameLoop and the FinishedOperationRunOptions menu display method
+                        // FinishedOperationRunOptions should probably be merged with FinishedRunOptions, but I couldn't get it working without messing it up
 {
     Console.WriteLine(Text.ChooseOperation);
     Console.WriteLine($"\t1. {Text.AdditionMode}");
@@ -100,7 +101,7 @@ void PlayByOperation()
         "2" => new List<Func<Question>> { QuestionGenerator.EasySubtraction },
         "3" => new List<Func<Question>> { QuestionGenerator.EasyMultiplication },
         "4" => new List<Func<Question>> { QuestionGenerator.EasyDivision },
-        _ => new List<Func<Question>> { QuestionGenerator.EasyAddition } // fallback, revisit later
+        _ => new List<Func<Question>> { QuestionGenerator.EasyAddition } // fallback, revisit later, should maybe add a message prompting the user to make a valid selection
     };
 
     string modeLabel = selectedOperation switch
@@ -179,7 +180,7 @@ void FinishedRunOptions(bool selectedDifficulty, string? finishedGameChoice)
     }
 }
 
-void FinishedOperationRunOptions(List<Func<Question>> operationGenerators, string modeLabel)
+void FinishedOperationRunOptions(List<Func<Question>> operationGenerators, string modeLabel) // displays a menu after finishing a Specific Operation run
 {
     Console.WriteLine($"\n\t1. {Text.Replay}");
     Console.WriteLine($"\t2. {Text.BackToMenu}");
@@ -204,7 +205,7 @@ void FinishedOperationRunOptions(List<Func<Question>> operationGenerators, strin
     }
 }
 
-void PastScores()
+void PastScores() // displays a list of up to ten runs (oldest one gets overwritten), could probably be renamed
 {
     Console.Clear();
 
@@ -225,7 +226,8 @@ void PastScores()
     GameMenu();
 }
 
-void GameLoop(List<Func<Question>> generators, string modeLabel)
+void GameLoop(List<Func<Question>> generators, string modeLabel)    // main gameplay loop, generates the five questions based on the selected game mode
+                                                                    // outputs all pertinent information to display on PastScores() and calculate the point total
 {
     Console.WriteLine($"{Text.SolveThis}\n");
     Stopwatch timeElapsed = Stopwatch.StartNew();
