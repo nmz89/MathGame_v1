@@ -96,8 +96,8 @@ public static class QuestionGenerator
     }
     public static Question HardDivision()
     {
-        int divisor = Random.Shared.Next(1, 101);
-        int quotient = Random.Shared.Next(0, 101);
+        int divisor = Random.Shared.Next(1, 31);
+        int quotient = Random.Shared.Next(0, 31);
 
         int dividend = divisor * quotient;
 

@@ -1,5 +1,5 @@
 ﻿using System.Diagnostics;
-int easyModeWinsInARow = 0;
+List<GameRunRecording> runHistory = new List<GameRunRecording>();
 
 GameStart();
 
@@ -11,8 +11,9 @@ void GameStart()
         Console.ForegroundColor = ConsoleColor.Cyan;
         Console.WriteLine("Welcome to Numheroes!\n¡Bienvenido a Numheroes!");
         Console.ResetColor();
-        Console.WriteLine("\nSelect your language:\nSelecciona tu idioma:");
+        Console.WriteLine("\nSelect your language:\nSelecciona tu idioma:\n");
         Console.WriteLine("\t1. 🇬🇧 English/Inglés\n\t2. 🇪🇸 Spanish/Español\n\t3. Exit/Salir");
+
 
         string? startupChoice = Console.ReadLine();
 
@@ -50,219 +51,93 @@ void GameMenu()
     Console.ResetColor();
 
     Console.WriteLine(Text.MainMenu);
-    Console.WriteLine(Text.EasyDifficulty);
-    Console.WriteLine(Text.HardDifficulty);
-    Console.WriteLine(Text.PastResults);
-    Console.WriteLine(Text.Exit);
+    Console.WriteLine($"\t1. {Text.EasyDifficulty}");
+    Console.WriteLine($"\t2. {Text.HardDifficulty}");
+    Console.WriteLine($"\t3. {Text.ChooseOperation}");
+    Console.ForegroundColor = ConsoleColor.Gray;
+    Console.WriteLine($"\t\t{Text.OperationExplanation}");
+    Console.ResetColor();
+    Console.WriteLine($"\t4. {Text.PastResults}");
+    Console.WriteLine($"\t5. {Text.MainExit}");
 
     string? gameMenuChoice = Console.ReadLine();
 
     switch (gameMenuChoice)
     {
         case "1":
-            EasyMode();
+            FiveQuestionsMode(false); // 'false' defaults to EASY mode
             break;
         case "2":
-            HardMode();
+            FiveQuestionsMode(true); // 'true' switches to HARD mode
             break;
         case "3":
-            PastScores();
+            PlayByOperation(); //
             break;
         case "4":
+            PastScores(); // not built out yet
+            break;
+        default: // display a goodbye message and close the application
             Console.WriteLine(Text.OutMessage);
             Thread.Sleep(1500);
             return;
 
     }
-
 }
 
-void EasyMode()
+void PlayByOperation()
 {
-    Console.WriteLine($"{Text.SolveThis}\n");
-    Stopwatch timeElapsed = Stopwatch.StartNew();
+    Console.WriteLine(Text.ChooseOperation);
+    Console.WriteLine($"\t1. {Text.AdditionMode}");
+    Console.WriteLine($"\t2. {Text.SubtractionMode}");
+    Console.WriteLine($"\t3. {Text.MultiplicationMode}");
+    Console.WriteLine($"\t4. {Text.DivisionMode}");
 
-    int correctAnswers = 0;
-    int currentStreak = 0;
-    int bestStreak = 0;
+    string? selectedOperation = Console.ReadLine();
 
-    for (int i = 1; i <= 5; i++)
+    List<Func<Question>> operationGenerators = selectedOperation switch
     {
-        Question question;
+        "1" => new List<Func<Question>> { QuestionGenerator.EasyAddition },
+        "2" => new List<Func<Question>> { QuestionGenerator.EasySubtraction },
+        "3" => new List<Func<Question>> { QuestionGenerator.EasyMultiplication },
+        "4" => new List<Func<Question>> { QuestionGenerator.EasyDivision },
+        _ => new List<Func<Question>> { QuestionGenerator.EasyAddition } // fallback, revisit later
+    };
 
-        switch (Random.Shared.Next(4))
-        {
-            case 0:
-                question = QuestionGenerator.EasyAddition();
-                break;
-            case 1:
-                question = QuestionGenerator.EasySubtraction();
-                break;
-            case 2:
-                question = QuestionGenerator.EasyDivision();
-                break;
-            default:
-                question = QuestionGenerator.EasyMultiplication();
-                break;
-        }
-
-        Console.WriteLine($"{Text.Question} {i}/5");
-        Console.WriteLine($"{question.FirstNumber} {question.Operator} {question.SecondNumber} = ?");
-
-        string? input = Console.ReadLine();
-
-        if (int.TryParse(input, out int userAnswer))
-        {
-            if (userAnswer == question.CorrectAnswer)
-            {
-                Console.ForegroundColor = ConsoleColor.Green;
-                Console.Write($"{Text.Correct}\n");
-                Console.ResetColor();
-                correctAnswers++;
-                currentStreak++;
-
-                if (currentStreak > bestStreak)
-                    bestStreak = currentStreak;
-            }
-            else
-            {
-                Console.ForegroundColor = ConsoleColor.Red;
-                Console.WriteLine($"{Text.Wrong}\n");
-                Console.ResetColor();
-                currentStreak = 0;
-            }
-        }
-        else
-        {
-            Console.WriteLine(Text.StopThat);
-        }
-
-        Console.WriteLine();
-    }
-
-    timeElapsed.Stop();
-    int finalTime = (int)Math.Round(timeElapsed.Elapsed.TotalSeconds);
-
-    if (correctAnswers == 5)
+    string modeLabel = selectedOperation switch
     {
-        easyModeWinsInARow++;
-        WinnersMenu(correctAnswers, finalTime);
-    }
-    else if (correctAnswers >= 3)
-    {
-        Console.ForegroundColor = ConsoleColor.Green;
-        Console.WriteLine($"\n{string.Format(Text.CorrectAnswers, correctAnswers)}");
-        Console.WriteLine($"{string.Format(Text.Streak, bestStreak)}");
-        Console.WriteLine($"{string.Format(Text.Time, finalTime)}");
-        Console.ResetColor();
+        "1" => Text.AdditionModeLabel,
+        "2" => Text.SubtractionModeLabel,
+        "3" => Text.MultiplicationModeLabel,
+        "4" => Text.DivisionModeLabel,
+        _ => "Addition"
+    };
 
-        easyModeWinsInARow++;
+    GameLoop(operationGenerators, modeLabel);
+    FinishedOperationRunOptions(operationGenerators, modeLabel);
+}
 
-        if (easyModeWinsInARow == 2)
-        {
-            WinnersMenu(correctAnswers, finalTime);
-        }
-    }
-    else
-    {
-        Console.ForegroundColor = ConsoleColor.Red;
-        Console.WriteLine($"\n{string.Format(Text.CorrectAnswers, correctAnswers)}");
-        Console.ResetColor();
-        Console.ForegroundColor = ConsoleColor.Green;
-        Console.WriteLine($"{string.Format(Text.Streak, bestStreak)}");
-        Console.ResetColor();
-        Console.WriteLine($"{string.Format(Text.Time, finalTime)}");
+void FiveQuestionsMode(bool selectedDifficulty)
+{
+    List<Func<Question>> generators = selectedDifficulty
+    ? new List<Func<Question>> { QuestionGenerator.HardAddition, QuestionGenerator.HardSubtraction, QuestionGenerator.HardMultiplication, QuestionGenerator.HardDivision }
+    : new List<Func<Question>> { QuestionGenerator.EasyAddition, QuestionGenerator.EasySubtraction, QuestionGenerator.EasyMultiplication, QuestionGenerator.EasyDivision };
 
-        easyModeWinsInARow = 0;
-
-    }
+    GameLoop(generators, selectedDifficulty ? Text.EasyModeLabel : Text.HardModeLabel);
 
     Console.ForegroundColor = ConsoleColor.Cyan;
-    Console.WriteLine($"{Text.PlayAgain}\n");
+    Console.WriteLine($"\n\t1. {Text.Replay}");
+    Console.WriteLine($"\t2. {Text.SwitchItUp}");
+    Console.WriteLine($"\t3. {Text.BackToMenu}");
+    Console.WriteLine($"\t4. {Text.MainExit}");
     Console.ResetColor();
 
-    string answerPlayAgain = Console.ReadLine()?.ToLower() ?? "n";
-
-    if (answerPlayAgain == "y")
-    {
-        EasyMode();
-    }
-    else if (answerPlayAgain == "n")
-    {
-        GameMenu();
-    }
+    string? finishedGameChoice = Console.ReadLine();
+    FinishedRunOptions(selectedDifficulty, finishedGameChoice);
 }
 
-void HardMode()
+void RoundStats(int correctAnswers, int bestStreak, int finalTime)
 {
-    Console.WriteLine($"{Text.SolveThis}\n");
-    Stopwatch timeElapsed = Stopwatch.StartNew();
-
-    int correctAnswers = 0;
-    int currentStreak = 0;
-    int bestStreak = 0;
-
-    for (int i = 1; i <= 5; i++)
-    {
-        Question question;
-
-        switch (Random.Shared.Next(4))
-        {
-            case 0:
-                question = QuestionGenerator.HardAddition();
-                break;
-            case 1:
-                question = QuestionGenerator.HardSubtraction();
-                break;
-            case 2:
-                question = QuestionGenerator.HardDivision();
-                break;
-            default:
-                question = QuestionGenerator.HardMultiplication();
-                break;
-        }
-
-        Console.WriteLine($"{Text.Question} {i}/5");
-        Console.WriteLine($"{question.FirstNumber} {question.Operator} {question.SecondNumber} = ?");
-
-        string? input = Console.ReadLine();
-
-        if (int.TryParse(input, out int userAnswer))
-        {
-            if (userAnswer == question.CorrectAnswer)
-            {
-                Console.ForegroundColor = ConsoleColor.Green;
-                Console.Write($"{Text.Correct}\n");
-                Console.ResetColor();
-                correctAnswers++;
-                currentStreak++;
-
-                if (currentStreak > bestStreak)
-                    bestStreak = currentStreak;
-            }
-            else
-            {
-                Console.ForegroundColor = ConsoleColor.Red;
-                Console.WriteLine($"{Text.Wrong}\n");
-                Console.ResetColor();
-                currentStreak = 0;
-            }
-        }
-        else
-        {
-            Console.WriteLine(Text.StopThat);
-        }
-        Console.WriteLine();
-    }
-
-    timeElapsed.Stop();
-    int finalTime = (int)Math.Round(timeElapsed.Elapsed.TotalSeconds);
-
-    if (correctAnswers == 5)
-    {
-        HardWinnersMenu(correctAnswers, finalTime);
-    }
-    else if (correctAnswers >= 3)
+    if (correctAnswers >= 3)
     {
         Console.ForegroundColor = ConsoleColor.Green;
         Console.WriteLine($"\n{string.Format(Text.CorrectAnswers, correctAnswers)}");
@@ -280,100 +155,159 @@ void HardMode()
         Console.ResetColor();
         Console.WriteLine($"{string.Format(Text.Time, finalTime)}");
     }
+}
 
-    Console.ForegroundColor = ConsoleColor.Cyan;
-    Console.WriteLine($"{Text.PlayAgain}\n");
-    Console.ResetColor();
-
-    string answerPlayAgain = Console.ReadLine()?.ToLower() ?? "n";
-
-    if (answerPlayAgain == "y")
+void FinishedRunOptions(bool selectedDifficulty, string? finishedGameChoice)
+{
+    switch (finishedGameChoice)
     {
-        HardMode();
+        case "1":
+            FiveQuestionsMode(selectedDifficulty);
+            break;
+
+        case "2":
+            FiveQuestionsMode(!selectedDifficulty);
+            break;
+        case "3":
+            GameMenu();
+            break;
+        default:
+            Console.WriteLine(Text.OutMessage);
+            Thread.Sleep(1500);
+            return;
+
     }
-    else if (answerPlayAgain == "n")
+}
+
+void FinishedOperationRunOptions(List<Func<Question>> operationGenerators, string modeLabel)
+{
+    Console.WriteLine($"\n\t1. {Text.Replay}");
+    Console.WriteLine($"\t2. {Text.BackToMenu}");
+    Console.WriteLine($"\t3. {Text.MainExit}");
+
+    string? userSelection = Console.ReadLine();
+
+    switch (userSelection)
     {
-        GameMenu();
+        case "1":
+            GameLoop(operationGenerators, modeLabel);
+            FinishedOperationRunOptions(operationGenerators, modeLabel);
+            break;
+        case "2":
+            GameMenu();
+            break;
+        default:
+            Console.WriteLine(Text.OutMessage);
+            Thread.Sleep(1500);
+            return;
+
     }
 }
 
 void PastScores()
 {
-    Console.WriteLine("Feature in progress");
-}
+    Console.Clear();
 
-void WinnersMenu(int correctAnswers, int finalTime)
-{
-    if (correctAnswers == 5)
+    if (runHistory.Count == 0)
     {
-        Console.ForegroundColor = ConsoleColor.Green;
-        Console.WriteLine($"{Text.Perfection}\n");
-        Console.WriteLine($"{string.Format(Text.Time, finalTime)}");
-        Console.ResetColor();
+        Console.WriteLine(Text.NoResultsYet);
     }
     else
     {
-        Console.ForegroundColor = ConsoleColor.Green;
-        Console.WriteLine($"{Text.DamnGood}\n");
-        Console.WriteLine($"{string.Format(Text.Time, finalTime)}");
-        Console.ResetColor();
+        foreach (var run in runHistory)
+        {
+            Console.WriteLine(run.ToString());
+        }
     }
 
-    Console.WriteLine($"1. {Text.EasyAgain}");
-    Console.WriteLine($"2. {Text.TryHard}");
-    Console.WriteLine($"3. {Text.MainExit}");
-
-    string? winnersChoice = Console.ReadLine();
-
-    switch (winnersChoice)
-    {
-        case "1":
-            EasyMode();
-            return;
-
-        case "2":
-            HardMode();
-            return;
-
-        case "3":
-            GameMenu();
-            return;
-    }
+    Console.WriteLine($"\n{Text.PressAnyKey}");
+    Console.ReadKey();
+    GameMenu();
 }
 
-void HardWinnersMenu(int correctAnswers, int finalTime)
+void GameLoop(List<Func<Question>> generators, string modeLabel)
 {
-    if (correctAnswers == 5)
+    Console.WriteLine($"{Text.SolveThis}\n");
+    Stopwatch timeElapsed = Stopwatch.StartNew();
+
+    int correctAnswers = 0;
+    int currentStreak = 0;
+    int bestStreak = 0;
+
+    for (int i = 1; i <= 5; i++)
     {
-        Console.ForegroundColor = ConsoleColor.Green;
-        Console.WriteLine($"{Text.Perfection}\n");
-        Console.WriteLine($"{string.Format(Text.Time, finalTime)}");
-        Console.ResetColor();
+        int index = Random.Shared.Next(generators.Count);
+        Question question = generators[index]();
+
+        Console.WriteLine($"{Text.Question} {i}/5");
+        Console.WriteLine($"{question.FirstNumber} {question.Operator} {question.SecondNumber} = ?");
+
+        string? input = Console.ReadLine();
+
+        if (int.TryParse(input, out int userAnswer))
+        {
+            if (userAnswer == question.CorrectAnswer)
+            {
+                Console.ForegroundColor = ConsoleColor.Green;
+                Console.Write($"{Text.Correct}\n");
+                Console.ResetColor();
+                correctAnswers++;
+                currentStreak++;
+
+                if (currentStreak > bestStreak)
+                    bestStreak = currentStreak;
+            }
+            else
+            {
+                Console.ForegroundColor = ConsoleColor.Red;
+                Console.WriteLine($"{Text.Wrong}\n");
+                Console.ResetColor();
+                currentStreak = 0;
+            }
+        }
+        else
+        {
+            Console.WriteLine(Text.StopThat);
+        }
+
+        Console.WriteLine();
     }
-    else
+
+    timeElapsed.Stop();
+    int finalTime = (int)Math.Round(timeElapsed.Elapsed.TotalSeconds);
+
+    RoundStats(correctAnswers, bestStreak, finalTime);
+    int score = CalculateScore(correctAnswers, bestStreak, finalTime);
+
+    int CalculateScore(int correctAnswers, int bestStreak, int finalTime)
     {
-        Console.ForegroundColor = ConsoleColor.Green;
-        Console.WriteLine($"{Text.DamnGood}\n");
-        Console.WriteLine($"{string.Format(Text.Time, finalTime)}");
-        Console.ResetColor();
+        int correctAnswersScore = correctAnswers;
+        int streakScore = bestStreak;
+
+        int timeScore;
+        if (correctAnswers == 0)
+            timeScore = 0;
+        else if (finalTime < 30)
+            timeScore = 5;
+        else if (finalTime < 60)
+            timeScore = 3;
+        else if (finalTime < 90)
+            timeScore = 1;
+        else
+            timeScore = 0;
+
+        return correctAnswersScore + streakScore + timeScore;
     }
 
-    Console.WriteLine($"1. {Text.HardAgain}");
-    Console.WriteLine($"2. {Text.MainExit}");
-
-    string? winnersChoice = Console.ReadLine();
-
-    switch (winnersChoice)
+    runHistory.Add(new GameRunRecording
     {
-        case "1":
-            HardMode();
-            return;
+        GamePlayMode = modeLabel,
+        FinalTime = finalTime,
+        CorrectAnswers = correctAnswers,
+        BestStreak = bestStreak,
+        Score = score
+    });
 
-        case "2":
-            GameMenu();
-            return;
-
-        default:
-            return;
-    }
+    if (runHistory.Count > 10)
+        runHistory.RemoveAt(0);
 }
